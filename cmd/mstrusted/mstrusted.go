@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	log.Printf("Verifying: %v (%v)\n", comment, pubKey)
+	log.Printf("Verifying with %v (%v)\n", comment, pubKey)
 	verifyFile(sigFile, "", pubKey, outputFlag, quietFlag, prettyQuietFlag, hashFlag, file)
 }
 

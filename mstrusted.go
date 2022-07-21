@@ -37,7 +37,7 @@ func extractID(s minisign.Signature) string {
 func readPubKey(keyPath string) (minisign.PublicKey, string, error) {
 	content, err := ioutil.ReadFile(keyPath)
 	if os.IsNotExist(err) {
-		return minisign.PublicKey{}, "", errors.New("mstrusted: public key doesn't exist.")
+		return minisign.PublicKey{}, "", errors.New("mstrusted: public key doesn't exist in trusted directory.")
 	} else if err != nil {
 		return minisign.PublicKey{}, "", errors.New("mstrusted: public key is unreadable.")
 	}
