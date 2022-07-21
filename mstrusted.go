@@ -1,6 +1,7 @@
 package mstrusted
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -32,35 +33,48 @@ func extractID(s minisign.Signature) string {
 	return strings.ToUpper(strconv.FormatUint(s.KeyID, 16))
 }
 
-func readPubKey(keyPath string) (minisign.PublicKey, error) {
-	bytes, err := ioutil.ReadFile(keyPath)
+// readPubKey reads from keyPath and returns public key and untrusted comment.
+func readPubKey(keyPath string) (minisign.PublicKey, string, error) {
+	content, err := ioutil.ReadFile(keyPath)
 	if os.IsNotExist(err) {
-		return minisign.PublicKey{}, errors.New("mstrusted: public key doesn't exist.")
+		return minisign.PublicKey{}, "", errors.New("mstrusted: public key doesn't exist.")
 	} else if err != nil {
-		return minisign.PublicKey{}, errors.New("mstrusted: public key is unreadable.")
+		return minisign.PublicKey{}, "", errors.New("mstrusted: public key is unreadable.")
 	}
-	var key minisign.PublicKey
-	if err = key.UnmarshalText(bytes); err != nil {
-		return minisign.PublicKey{}, err
+
+	var (
+		key     minisign.PublicKey
+		comment string = ""
+	)
+
+	const prefix = "untrusted comment: "
+	if strings.HasPrefix(string(content), prefix) {
+		commentLine := string(bytes.SplitN(content, []byte{'\n'}, 2)[0])
+		comment = commentLine[len(prefix):]
 	}
-	return key, nil
+
+	if err = key.UnmarshalText(content); err != nil {
+		return minisign.PublicKey{}, "", err
+	}
+	return key, comment, nil
 }
 
-func SearchTrustedPubKey(sigFile string) (string, error) {
+// SearchTrustedPubKey returns base64 of public key, untrusted comment and error if raised.
+func SearchTrustedPubKey(sigFile string) (string, string, error) {
 	if err := ensureTrustedDir(); err != nil {
-		return "", errors.New("mstrusted: can't create trusted directory.")
+		return "", "", errors.New("mstrusted: can't create trusted directory.")
 	}
 
 	signature, err := minisign.SignatureFromFile(sigFile)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	keyPath := filepath.Join(getTrustedPath(), extractID(signature)+".pub")
-	key, err := readPubKey(keyPath)
+	key, comment, err := readPubKey(keyPath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return key.String(), nil
+	return key.String(), comment, nil
 }

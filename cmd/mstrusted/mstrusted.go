@@ -29,11 +29,11 @@ func main() {
 	flag.StringVar(&file, "m", "", "file to verify.")
 	flag.Parse()
 
-	pubKey, err := mstrusted.SearchTrustedPubKey(sigFile)
+	pubKey, comment, err := mstrusted.SearchTrustedPubKey(sigFile)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	log.Println(pubKey)
+	log.Printf("Verifying: %v (%v)\n", comment, pubKey)
 	verifyFile(sigFile, "", pubKey, outputFlag, quietFlag, prettyQuietFlag, hashFlag, file)
 }
 
