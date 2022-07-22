@@ -1,4 +1,4 @@
-package mstrusted
+package minitrust
 
 import (
 	"encoding/base64"
@@ -54,7 +54,7 @@ func EncodeID(keyId [8]byte) string {
 func decodeKeyFileContent(in string) (minisign.PublicKey, string, error) {
 	lines := strings.SplitN(in, "\n", 2)
 	if len(lines) < 2 || !strings.HasPrefix(lines[0], commentPrefix) {
-		return minisign.PublicKey{}, "", errors.New("mstrusted: incomplete encoded public key.")
+		return minisign.PublicKey{}, "", errors.New("minitrust: incomplete encoded public key.")
 	}
 	comment := lines[0][len(commentPrefix):]
 	key, err := minisign.NewPublicKey(lines[1])
@@ -68,7 +68,7 @@ func decodeKeyFileContent(in string) (minisign.PublicKey, string, error) {
 func readKeyFile(keyPath string) (minisign.PublicKey, string, error) {
 	content, err := ioutil.ReadFile(keyPath)
 	if os.IsNotExist(err) {
-		return minisign.PublicKey{}, "", errors.New("mstrusted: public key doesn't exist in trusted directory.")
+		return minisign.PublicKey{}, "", errors.New("minitrust: public key doesn't exist in trusted directory.")
 	} else if err != nil {
 		return minisign.PublicKey{}, "", err
 	}
@@ -82,7 +82,7 @@ func getKeyPath(keyID [8]byte) string {
 // SearchTrustedPubKey returns public key and untrusted comment.
 func SearchTrustedPubKey(sigFile string) (minisign.PublicKey, string, error) {
 	if err := ensureTrustedDir(); err != nil {
-		return minisign.PublicKey{}, "", errors.New("mstrusted: can't create trusted directory.")
+		return minisign.PublicKey{}, "", errors.New("minitrust: can't create trusted directory.")
 	}
 
 	signature, err := minisign.NewSignatureFromFile(sigFile)
@@ -100,7 +100,7 @@ func SearchTrustedPubKey(sigFile string) (minisign.PublicKey, string, error) {
 
 func AddTrustedPubKey(rawPubKey string, comment string) error {
 	if strings.Count(comment, "\n") != 0 {
-		return errors.New("mstrusted: comment must be one-lined.")
+		return errors.New("minitrust: comment must be one-lined.")
 	}
 
 	pk, err := minisign.NewPublicKey(rawPubKey)

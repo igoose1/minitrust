@@ -1,4 +1,4 @@
-package mstrusted
+package minitrust
 
 import (
 	"testing"

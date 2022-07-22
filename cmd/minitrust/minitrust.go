@@ -8,13 +8,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/igoose1/minitrust"
 	"github.com/jedisct1/go-minisign"
-	"oskarsh.ru/mstrusted"
 )
 
 const Usage = `Usage:
-mstrusted -V [-x sigfile] [-o] -m file
-mstrusted -A [-c comment] -P pubkey
+minitrust -V [-x sigfile] [-o] -m file
+minitrust -A [-c comment] -P pubkey
 
 -V		verify that a signature is valid for a given file
 -A		add new public key to trusted directory
@@ -56,7 +56,7 @@ func main() {
 	case "-V":
 		verifyCommand.Parse(os.Args[2:])
 		if file == "" {
-			logger.Fatalln("Error: mstrusted: set -m argument.")
+			logger.Fatalln("Error: minitrust: set -m argument.")
 		}
 		if sigFile == "" {
 			sigFile = file + ".minisig"
@@ -85,15 +85,15 @@ func main() {
 }
 
 func add(pubKey string, comment string) error {
-	return mstrusted.AddTrustedPubKey(pubKey, comment)
+	return minitrust.AddTrustedPubKey(pubKey, comment)
 }
 
 func verify(file string, sigFile string) error {
-	key, comment, err := mstrusted.SearchTrustedPubKey(sigFile)
+	key, comment, err := minitrust.SearchTrustedPubKey(sigFile)
 	if err != nil {
 		return err
 	}
-	logger.Printf("Verifying with %v (%v).\n", comment, mstrusted.EncodeID(key.KeyId))
+	logger.Printf("Verifying with %v (%v).\n", comment, minitrust.EncodeID(key.KeyId))
 	s, err := minisign.NewSignatureFromFile(sigFile)
 	if err != nil {
 		return err

@@ -1,4 +1,4 @@
-module oskarsh.ru/mstrusted
+module github.com/igoose1/minitrust
 
 go 1.18
 
