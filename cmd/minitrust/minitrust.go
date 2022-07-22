@@ -114,11 +114,13 @@ func main() {
 }
 
 func add(trustedDir, pubKey, comment string) error {
-	return minitrust.AddTrustedPubKey(trustedDir, pubKey, comment)
+	b := minitrust.New(trustedDir)
+	return b.AddTrustedPubKey(pubKey, comment)
 }
 
 func verify(trustedDir, file, sigFile string) error {
-	key, comment, err := minitrust.SearchTrustedPubKey(trustedDir, sigFile)
+	b := minitrust.New(trustedDir)
+	key, comment, err := b.SearchTrustedPubKey(sigFile)
 	if err != nil {
 		return err
 	}

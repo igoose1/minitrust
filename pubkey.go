@@ -19,31 +19,14 @@ import (
 	"encoding/binary"
 	"errors"
 	"io/ioutil"
-	"log"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/jedisct1/go-minisign"
 )
 
-var logger = log.New(os.Stderr, "", log.Lshortfile)
-
 const commentPrefix = "untrusted comment: "
-const trustedDirEnv = "MINITRUST_DIR"
-const (
-	trustedDirPerm = 0700
-	trustedKeyPerm = 0600
-)
-
-func ensureTrustedDir(trustedDir string) error {
-	err := os.MkdirAll(trustedDir, trustedDirPerm)
-	if !os.IsExist(err) {
-		return err
-	}
-	return nil
-}
 
 func EncodePublicKey(pk minisign.PublicKey) string {
 	var bin [42]byte
@@ -80,50 +63,4 @@ func readKeyFile(keyPath string) (minisign.PublicKey, string, error) {
 		return minisign.PublicKey{}, "", err
 	}
 	return decodeKeyFileContent(string(content))
-}
-
-func getKeyPath(trustedDir string, keyID [8]byte) string {
-	return filepath.Join(trustedDir, EncodeID(keyID)+".pub")
-}
-
-// SearchTrustedPubKey returns public key and untrusted comment.
-func SearchTrustedPubKey(trustedDir, sigFile string) (minisign.PublicKey, string, error) {
-	if err := ensureTrustedDir(trustedDir); err != nil {
-		return minisign.PublicKey{}, "", errors.New("minitrust: can't create trusted directory.")
-	}
-
-	signature, err := minisign.NewSignatureFromFile(sigFile)
-	if err != nil {
-		return minisign.PublicKey{}, "", err
-	}
-
-	key, comment, err := readKeyFile(getKeyPath(trustedDir, signature.KeyId))
-	if err != nil {
-		return minisign.PublicKey{}, "", err
-	}
-
-	return key, comment, nil
-}
-
-func AddTrustedPubKey(trustedDir, rawPubKey, comment string) error {
-	if err := ensureTrustedDir(trustedDir); err != nil {
-		return errors.New("minitrust: can't create trusted directory.")
-	}
-	if strings.Count(comment, "\n") != 0 {
-		return errors.New("minitrust: comment must be one-lined.")
-	}
-
-	pk, err := minisign.NewPublicKey(rawPubKey)
-	if err != nil {
-		return err
-	}
-
-	content := strings.Join(
-		[]string{
-			commentPrefix + comment,
-			EncodePublicKey(pk),
-		},
-		"\n",
-	)
-	return ioutil.WriteFile(getKeyPath(trustedDir, pk.KeyId), []byte(content), trustedKeyPerm)
 }
