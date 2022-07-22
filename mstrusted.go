@@ -14,6 +14,10 @@ import (
 	"github.com/jedisct1/go-minisign"
 )
 
+const commentPrefix = "untrusted comment: "
+const trustedDirPerm = 0700
+const trustedKeyPerm = 0600
+
 func getTrustedPath() string {
 	dirname, err := os.UserHomeDir()
 	if err != nil {
@@ -23,7 +27,7 @@ func getTrustedPath() string {
 }
 
 func ensureTrustedDir() error {
-	err := os.MkdirAll(getTrustedPath(), 0700)
+	err := os.MkdirAll(getTrustedPath(), trustedDirPerm)
 	if !os.IsExist(err) {
 		return err
 	}
@@ -44,12 +48,11 @@ func EncodeID(keyId [8]byte) string {
 }
 
 func decodeKeyFileContent(in string) (minisign.PublicKey, string, error) {
-	const prefix = "untrusted comment: "
 	lines := strings.SplitN(in, "\n", 2)
-	if len(lines) < 2 || !strings.HasPrefix(lines[0], prefix) {
+	if len(lines) < 2 || !strings.HasPrefix(lines[0], commentPrefix) {
 		return minisign.PublicKey{}, "", errors.New("mstrusted: incomplete encoded public key.")
 	}
-	comment := lines[0][len(prefix):]
+	comment := lines[0][len(commentPrefix):]
 	key, err := minisign.NewPublicKey(lines[1])
 	if err != nil {
 		return minisign.PublicKey{}, "", err
@@ -68,6 +71,10 @@ func readKeyFile(keyPath string) (minisign.PublicKey, string, error) {
 	return decodeKeyFileContent(string(content))
 }
 
+func getKeyPath(keyID [8]byte) string {
+	return filepath.Join(getTrustedPath(), EncodeID(keyID)+".pub")
+}
+
 // SearchTrustedPubKey returns public key and untrusted comment.
 func SearchTrustedPubKey(sigFile string) (minisign.PublicKey, string, error) {
 	if err := ensureTrustedDir(); err != nil {
@@ -79,11 +86,30 @@ func SearchTrustedPubKey(sigFile string) (minisign.PublicKey, string, error) {
 		return minisign.PublicKey{}, "", err
 	}
 
-	keyPath := filepath.Join(getTrustedPath(), EncodeID(signature.KeyId)+".pub")
-	key, comment, err := readKeyFile(keyPath)
+	key, comment, err := readKeyFile(getKeyPath(signature.KeyId))
 	if err != nil {
 		return minisign.PublicKey{}, "", err
 	}
 
 	return key, comment, nil
+}
+
+func AddTrustedPubKey(rawPubKey string, comment string) error {
+	if strings.Count(comment, "\n") != 0 {
+		return errors.New("mstrusted: comment must be one-lined.")
+	}
+
+	pk, err := minisign.NewPublicKey(rawPubKey)
+	if err != nil {
+		return err
+	}
+
+	content := strings.Join(
+		[]string{
+			commentPrefix + comment,
+			EncodePublicKey(pk),
+		},
+		"\n",
+	)
+	return ioutil.WriteFile(getKeyPath(pk.KeyId), []byte(content), trustedKeyPerm)
 }
