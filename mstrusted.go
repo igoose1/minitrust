@@ -14,14 +14,18 @@ import (
 	"github.com/jedisct1/go-minisign"
 )
 
+var logger = log.New(os.Stderr, "", log.Lshortfile)
+
 const commentPrefix = "untrusted comment: "
-const trustedDirPerm = 0700
-const trustedKeyPerm = 0600
+const (
+	trustedDirPerm = 0700
+	trustedKeyPerm = 0600
+)
 
 func getTrustedPath() string {
 	dirname, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	return filepath.Join(dirname, ".minisign/trusted")
 }

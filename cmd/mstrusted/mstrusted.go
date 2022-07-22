@@ -12,6 +12,21 @@ import (
 	"oskarsh.ru/mstrusted"
 )
 
+const Usage = `Usage:
+mstrusted -V [-x sigfile] [-o] -m file
+mstrusted -A [-c comment] -P pubkey
+
+-V		verify that a signature is valid for a given file
+-A		add new public key to trusted directory
+-x		signature file (default: <file>.minisig)
+-o		output the file content after verification
+-m		file to verify
+-P		public key, as a base64 string
+-c		one-line untrusted comment
+`
+
+var logger = log.New(os.Stderr, "", log.Lshortfile)
+
 func main() {
 	var (
 		//	hashFlag   bool
@@ -26,30 +41,33 @@ func main() {
 	verifyCommand.StringVar(&sigFile, "x", "", "signature file (default: <file>.minisig)")
 	verifyCommand.BoolVar(&outputFlag, "o", false, "output the file content after verification")
 	verifyCommand.StringVar(&file, "m", "", "file to verify.")
+	verifyCommand.Usage = func() { fmt.Fprint(os.Stderr, Usage) }
 
 	addCommand := flag.NewFlagSet("-A", flag.ExitOnError)
-	addCommand.StringVar(&pubKey, "P", "", "public key, as a base64 string.")
-	addCommand.StringVar(&comment, "c", "", "add a one-line untrusted comment. (default: <date>")
+	addCommand.StringVar(&pubKey, "P", "", "public key, as a base64 string")
+	addCommand.StringVar(&comment, "c", "", "one-line untrusted comment")
+	addCommand.Usage = func() { fmt.Fprint(os.Stderr, Usage) }
 
 	if len(os.Args) < 2 {
-		log.Fatalln("Error: mstrusted: call with -V or -A.")
+		fmt.Fprint(os.Stderr, Usage)
+		os.Exit(0)
 	}
 	switch os.Args[1] {
 	case "-V":
 		verifyCommand.Parse(os.Args[2:])
 		if file == "" {
-			log.Fatalln("Error: mstrusted: set -m argument.")
+			logger.Fatalln("Error: mstrusted: set -m argument.")
 		}
 		if sigFile == "" {
 			sigFile = file + ".minisig"
 		}
 		err := verify(file, sigFile)
 		if err != nil {
-			log.Fatalf("Error: %v\n", err)
+			logger.Fatalf("Error: %v\n", err)
 		}
 		if outputFlag {
 			if err := outputFile(file); err != nil {
-				log.Fatalf("Error: %v\n", err)
+				logger.Fatalf("Error: %v\n", err)
 			}
 		}
 	case "-A":
@@ -59,8 +77,10 @@ func main() {
 		}
 		err := add(pubKey, comment)
 		if err != nil {
-			log.Fatalf("Error: %v\n", err)
+			logger.Fatalf("Error: %v\n", err)
 		}
+	default:
+		fmt.Fprint(os.Stderr, Usage)
 	}
 }
 
@@ -73,7 +93,7 @@ func verify(file string, sigFile string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Verifying with %v (%v).\n", comment, mstrusted.EncodeID(key.KeyId))
+	logger.Printf("Verifying with %v (%v).\n", comment, mstrusted.EncodeID(key.KeyId))
 	s, err := minisign.NewSignatureFromFile(sigFile)
 	if err != nil {
 		return err
@@ -82,7 +102,7 @@ func verify(file string, sigFile string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Signature and comment signature verified.")
+	logger.Printf("Signature and comment signature verified.")
 	return nil
 }
 
