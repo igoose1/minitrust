@@ -32,7 +32,7 @@ minitrust -V [-x sigfile] [-o] -m file
 minitrust -T [-c comment] -P pubkey
 
 -V             verify that a signature is valid for a given file
--T             add new public key to trusted directory
+-T             add new public key to list of "trusted"
 -x             signature file (default: <file>.minisig)
 -o             output the file content after verification
 -m             file to verify
