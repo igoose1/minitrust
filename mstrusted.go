@@ -1,7 +1,8 @@
 package mstrusted
 
 import (
-	"bytes"
+	"encoding/base64"
+	"encoding/binary"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -10,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"aead.dev/minisign"
+	"github.com/jedisct1/go-minisign"
 )
 
 func getTrustedPath() string {
@@ -29,52 +30,60 @@ func ensureTrustedDir() error {
 	return nil
 }
 
-func extractID(s minisign.Signature) string {
-	return strings.ToUpper(strconv.FormatUint(s.KeyID, 16))
+func EncodePublicKey(pk minisign.PublicKey) string {
+	var bin [42]byte
+	copy(bin[:2], pk.SignatureAlgorithm[:])
+	copy(bin[2:10], pk.KeyId[:])
+	copy(bin[10:42], pk.PublicKey[:])
+	return base64.StdEncoding.EncodeToString(bin[:])
 }
 
-// readPubKey reads from keyPath and returns public key and untrusted comment.
-func readPubKey(keyPath string) (minisign.PublicKey, string, error) {
-	content, err := ioutil.ReadFile(keyPath)
-	if os.IsNotExist(err) {
-		return minisign.PublicKey{}, "", errors.New("mstrusted: public key doesn't exist in trusted directory.")
-	} else if err != nil {
-		return minisign.PublicKey{}, "", errors.New("mstrusted: public key is unreadable.")
-	}
+func EncodeID(keyId [8]byte) string {
+	le64ID := binary.LittleEndian.Uint64(keyId[:])
+	return strings.ToUpper(strconv.FormatUint(le64ID, 16))
+}
 
-	var (
-		key     minisign.PublicKey
-		comment string = ""
-	)
-
+func decodeKeyFileContent(in string) (minisign.PublicKey, string, error) {
 	const prefix = "untrusted comment: "
-	if strings.HasPrefix(string(content), prefix) {
-		commentLine := string(bytes.SplitN(content, []byte{'\n'}, 2)[0])
-		comment = commentLine[len(prefix):]
+	lines := strings.SplitN(in, "\n", 2)
+	if len(lines) < 2 || !strings.HasPrefix(lines[0], prefix) {
+		return minisign.PublicKey{}, "", errors.New("mstrusted: incomplete encoded public key.")
 	}
-
-	if err = key.UnmarshalText(content); err != nil {
+	comment := lines[0][len(prefix):]
+	key, err := minisign.NewPublicKey(lines[1])
+	if err != nil {
 		return minisign.PublicKey{}, "", err
 	}
 	return key, comment, nil
 }
 
-// SearchTrustedPubKey returns base64 of public key, untrusted comment and error if raised.
-func SearchTrustedPubKey(sigFile string) (string, string, error) {
+// readKeyFile reads from keyPath and returns public key with untrusted comment.
+func readKeyFile(keyPath string) (minisign.PublicKey, string, error) {
+	content, err := ioutil.ReadFile(keyPath)
+	if os.IsNotExist(err) {
+		return minisign.PublicKey{}, "", errors.New("mstrusted: public key doesn't exist in trusted directory.")
+	} else if err != nil {
+		return minisign.PublicKey{}, "", err
+	}
+	return decodeKeyFileContent(string(content))
+}
+
+// SearchTrustedPubKey returns public key and untrusted comment.
+func SearchTrustedPubKey(sigFile string) (minisign.PublicKey, string, error) {
 	if err := ensureTrustedDir(); err != nil {
-		return "", "", errors.New("mstrusted: can't create trusted directory.")
+		return minisign.PublicKey{}, "", errors.New("mstrusted: can't create trusted directory.")
 	}
 
-	signature, err := minisign.SignatureFromFile(sigFile)
+	signature, err := minisign.NewSignatureFromFile(sigFile)
 	if err != nil {
-		return "", "", err
+		return minisign.PublicKey{}, "", err
 	}
 
-	keyPath := filepath.Join(getTrustedPath(), extractID(signature)+".pub")
-	key, comment, err := readPubKey(keyPath)
+	keyPath := filepath.Join(getTrustedPath(), EncodeID(signature.KeyId)+".pub")
+	key, comment, err := readKeyFile(keyPath)
 	if err != nil {
-		return "", "", err
+		return minisign.PublicKey{}, "", err
 	}
 
-	return key.String(), comment, nil
+	return key, comment, nil
 }
