@@ -29,4 +29,13 @@ minitrust uses [go-minisign][go-minisign].
 
 ## Compile
 
+Build from source with Go 1.18+.
+
 	% go build -o . ./cmd/minitrust/minitrust.go
+
+Also, building with redo is supported.
+
+	% redo
+
+For more information about redo, I recommend installing
+[goredo](http://www.goredo.cypherpunks.ru/).
