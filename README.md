@@ -1,0 +1,30 @@
+# Minitrust
+
+Minitrust is a tool to verify minisign signatures with public keys from
+"trusted list".
+
+For more information about minisign, please refer to the [Minisign
+documentation][minisign-docs].
+
+[minisign-docs]: https://jedisct1.github.io/minisign/
+
+## Usage
+
+	minitrust -V [-x sigfile] [-o] -m file
+	minitrust -T [-c comment] -P pubkey
+
+	-V             verify that a signature is valid for a given file
+	-T             add new public key to trusted directory
+	-x             signature file (default: <file>.minisig)
+	-o             output the file content after verification
+	-m             file to verify
+	-P             public key, as a base64 string
+	-c             one-line untrusted comment
+
+	Environment variables:
+
+	MINITRUST_DIR  name of the trusted directory (default: ~/.minisign/trusted)
+
+## Compile
+
+	% go build -o . ./cmd/minitrust/minitrust.go

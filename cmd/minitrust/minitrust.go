@@ -29,19 +29,19 @@ import (
 
 const Usage = `Usage:
 minitrust -V [-x sigfile] [-o] -m file
-minitrust -A [-c comment] -P pubkey
+minitrust -T [-c comment] -P pubkey
 
--V				verify that a signature is valid for a given file
--A				add new public key to trusted directory
--x				signature file (default: <file>.minisig)
--o				output the file content after verification
--m				file to verify
--P				public key, as a base64 string
--c				one-line untrusted comment
+-V             verify that a signature is valid for a given file
+-T             add new public key to trusted directory
+-x             signature file (default: <file>.minisig)
+-o             output the file content after verification
+-m             file to verify
+-P             public key, as a base64 string
+-c             one-line untrusted comment
 
 Environment variables:
 
-MINITRUST_DIR	name of the trusted directory (default: ~/.minisign/trusted)
+MINITRUST_DIR  name of the trusted directory (default: ~/.minisign/trusted)
 `
 
 var logger = log.New(os.Stderr, "", log.Lshortfile)
@@ -63,7 +63,7 @@ func main() {
 	verifyCommand.StringVar(&file, "m", "", "file to verify.")
 	verifyCommand.Usage = func() { fmt.Fprint(os.Stderr, Usage) }
 
-	addCommand := flag.NewFlagSet("-A", flag.ExitOnError)
+	addCommand := flag.NewFlagSet("-T", flag.ExitOnError)
 	addCommand.StringVar(&pubKey, "P", "", "public key, as a base64 string")
 	addCommand.StringVar(&comment, "c", "", "one-line untrusted comment")
 	addCommand.Usage = func() { fmt.Fprint(os.Stderr, Usage) }
@@ -99,7 +99,7 @@ func main() {
 				logger.Fatalf("Error: %v\n", err)
 			}
 		}
-	case "-A":
+	case "-T":
 		addCommand.Parse(os.Args[2:])
 		if comment == "" {
 			comment = "key added on " + time.Now().Format("2006-01-02")
