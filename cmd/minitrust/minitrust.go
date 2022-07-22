@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/igoose1/minitrust"
@@ -16,13 +17,17 @@ const Usage = `Usage:
 minitrust -V [-x sigfile] [-o] -m file
 minitrust -A [-c comment] -P pubkey
 
--V		verify that a signature is valid for a given file
--A		add new public key to trusted directory
--x		signature file (default: <file>.minisig)
--o		output the file content after verification
--m		file to verify
--P		public key, as a base64 string
--c		one-line untrusted comment
+-V				verify that a signature is valid for a given file
+-A				add new public key to trusted directory
+-x				signature file (default: <file>.minisig)
+-o				output the file content after verification
+-m				file to verify
+-P				public key, as a base64 string
+-c				one-line untrusted comment
+
+Environment variables:
+
+MINITRUST_DIR	name of the trusted directory (default: ~/.minisign/trusted)
 `
 
 var logger = log.New(os.Stderr, "", log.Lshortfile)
@@ -35,6 +40,7 @@ func main() {
 		file       string
 		pubKey     string
 		comment    string
+		trustedDir string
 	)
 	verifyCommand := flag.NewFlagSet("-V", flag.ExitOnError)
 	// flag.BoolVar(&hashFlag, "H", false, "require input to be prehashed.")
@@ -47,6 +53,15 @@ func main() {
 	addCommand.StringVar(&pubKey, "P", "", "public key, as a base64 string")
 	addCommand.StringVar(&comment, "c", "", "one-line untrusted comment")
 	addCommand.Usage = func() { fmt.Fprint(os.Stderr, Usage) }
+
+	trustedDir = os.Getenv("MINITRUST_DIR")
+	if trustedDir == "" {
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			logger.Fatal(err)
+		}
+		trustedDir = filepath.Join(homedir, ".minisign/trusted")
+	}
 
 	if len(os.Args) < 2 {
 		fmt.Fprint(os.Stderr, Usage)
@@ -61,7 +76,7 @@ func main() {
 		if sigFile == "" {
 			sigFile = file + ".minisig"
 		}
-		err := verify(file, sigFile)
+		err := verify(trustedDir, file, sigFile)
 		if err != nil {
 			logger.Fatalf("Error: %v\n", err)
 		}
@@ -75,7 +90,7 @@ func main() {
 		if comment == "" {
 			comment = "key added on " + time.Now().Format("2006-01-02")
 		}
-		err := add(pubKey, comment)
+		err := add(trustedDir, pubKey, comment)
 		if err != nil {
 			logger.Fatalf("Error: %v\n", err)
 		}
@@ -84,12 +99,12 @@ func main() {
 	}
 }
 
-func add(pubKey string, comment string) error {
-	return minitrust.AddTrustedPubKey(pubKey, comment)
+func add(trustedDir, pubKey, comment string) error {
+	return minitrust.AddTrustedPubKey(trustedDir, pubKey, comment)
 }
 
-func verify(file string, sigFile string) error {
-	key, comment, err := minitrust.SearchTrustedPubKey(sigFile)
+func verify(trustedDir, file, sigFile string) error {
+	key, comment, err := minitrust.SearchTrustedPubKey(trustedDir, sigFile)
 	if err != nil {
 		return err
 	}

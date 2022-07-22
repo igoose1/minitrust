@@ -17,21 +17,14 @@ import (
 var logger = log.New(os.Stderr, "", log.Lshortfile)
 
 const commentPrefix = "untrusted comment: "
+const trustedDirEnv = "MINITRUST_DIR"
 const (
 	trustedDirPerm = 0700
 	trustedKeyPerm = 0600
 )
 
-func getTrustedPath() string {
-	dirname, err := os.UserHomeDir()
-	if err != nil {
-		logger.Fatal(err)
-	}
-	return filepath.Join(dirname, ".minisign/trusted")
-}
-
-func ensureTrustedDir() error {
-	err := os.MkdirAll(getTrustedPath(), trustedDirPerm)
+func ensureTrustedDir(trustedDir string) error {
+	err := os.MkdirAll(trustedDir, trustedDirPerm)
 	if !os.IsExist(err) {
 		return err
 	}
@@ -75,13 +68,13 @@ func readKeyFile(keyPath string) (minisign.PublicKey, string, error) {
 	return decodeKeyFileContent(string(content))
 }
 
-func getKeyPath(keyID [8]byte) string {
-	return filepath.Join(getTrustedPath(), EncodeID(keyID)+".pub")
+func getKeyPath(trustedDir string, keyID [8]byte) string {
+	return filepath.Join(trustedDir, EncodeID(keyID)+".pub")
 }
 
 // SearchTrustedPubKey returns public key and untrusted comment.
-func SearchTrustedPubKey(sigFile string) (minisign.PublicKey, string, error) {
-	if err := ensureTrustedDir(); err != nil {
+func SearchTrustedPubKey(trustedDir, sigFile string) (minisign.PublicKey, string, error) {
+	if err := ensureTrustedDir(trustedDir); err != nil {
 		return minisign.PublicKey{}, "", errors.New("minitrust: can't create trusted directory.")
 	}
 
@@ -90,7 +83,7 @@ func SearchTrustedPubKey(sigFile string) (minisign.PublicKey, string, error) {
 		return minisign.PublicKey{}, "", err
 	}
 
-	key, comment, err := readKeyFile(getKeyPath(signature.KeyId))
+	key, comment, err := readKeyFile(getKeyPath(trustedDir, signature.KeyId))
 	if err != nil {
 		return minisign.PublicKey{}, "", err
 	}
@@ -98,7 +91,10 @@ func SearchTrustedPubKey(sigFile string) (minisign.PublicKey, string, error) {
 	return key, comment, nil
 }
 
-func AddTrustedPubKey(rawPubKey string, comment string) error {
+func AddTrustedPubKey(trustedDir, rawPubKey, comment string) error {
+	if err := ensureTrustedDir(trustedDir); err != nil {
+		return errors.New("minitrust: can't create trusted directory.")
+	}
 	if strings.Count(comment, "\n") != 0 {
 		return errors.New("minitrust: comment must be one-lined.")
 	}
@@ -115,5 +111,5 @@ func AddTrustedPubKey(rawPubKey string, comment string) error {
 		},
 		"\n",
 	)
-	return ioutil.WriteFile(getKeyPath(pk.KeyId), []byte(content), trustedKeyPerm)
+	return ioutil.WriteFile(getKeyPath(trustedDir, pk.KeyId), []byte(content), trustedKeyPerm)
 }
