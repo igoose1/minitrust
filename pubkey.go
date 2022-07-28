@@ -28,6 +28,7 @@ import (
 
 const commentPrefix = "untrusted comment: "
 
+// EncodePublicKey returns base64-coded public key.
 func EncodePublicKey(pk minisign.PublicKey) string {
 	var bin [42]byte
 	copy(bin[:2], pk.SignatureAlgorithm[:])
@@ -36,12 +37,14 @@ func EncodePublicKey(pk minisign.PublicKey) string {
 	return base64.StdEncoding.EncodeToString(bin[:])
 }
 
+// EncodeID returns hex-coded public key ID.
 func EncodeID(keyId [8]byte) string {
 	le64ID := binary.LittleEndian.Uint64(keyId[:])
 	return strings.ToUpper(strconv.FormatUint(le64ID, 16))
 }
 
-func decodeKeyFileContent(in string) (minisign.PublicKey, string, error) {
+// DecodeKeyFileContent parses `in` and returns PublicKey and untrusted comment.
+func DecodeKeyFileContent(in string) (minisign.PublicKey, string, error) {
 	lines := strings.SplitN(in, "\n", 2)
 	if len(lines) < 2 || !strings.HasPrefix(lines[0], commentPrefix) {
 		return minisign.PublicKey{}, "", errors.New("minitrust: incomplete encoded public key.")
@@ -54,13 +57,13 @@ func decodeKeyFileContent(in string) (minisign.PublicKey, string, error) {
 	return key, comment, nil
 }
 
-// readKeyFile reads from keyPath and returns public key with untrusted comment.
-func readKeyFile(keyPath string) (minisign.PublicKey, string, error) {
+// ReadKeyFile reads from keyPath and returns public key with untrusted comment.
+func ReadKeyFile(keyPath string) (minisign.PublicKey, string, error) {
 	content, err := ioutil.ReadFile(keyPath)
 	if os.IsNotExist(err) {
 		return minisign.PublicKey{}, "", errors.New("minitrust: public key doesn't exist in trusted directory.")
 	} else if err != nil {
 		return minisign.PublicKey{}, "", err
 	}
-	return decodeKeyFileContent(string(content))
+	return DecodeKeyFileContent(string(content))
 }

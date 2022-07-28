@@ -137,8 +137,8 @@ func verify(trustedDir, file, sigFile string) error {
 	return nil
 }
 
-func outputFile(filePath string) error {
-	file, err := os.Open(filePath)
+func outputFile(readFrom string) error {
+	file, err := os.Open(readFrom)
 	if err != nil {
 		return err
 	}

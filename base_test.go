@@ -29,7 +29,7 @@ func TestEnsureTrustedDir(t *testing.T) {
 		filepath.Join(dir, "exists"),
 	} {
 		b := New(test)
-		if err := b.ensureTrustedDir(); err != nil {
+		if err := b.EnsureTrustedDir(); err != nil {
 			t.Fatal(err)
 		}
 		_, err := os.Stat(test)
