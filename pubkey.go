@@ -18,7 +18,6 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -59,7 +58,7 @@ func DecodeKeyFileContent(in string) (minisign.PublicKey, string, error) {
 
 // ReadKeyFile reads from keyPath and returns public key with untrusted comment.
 func ReadKeyFile(keyPath string) (minisign.PublicKey, string, error) {
-	content, err := ioutil.ReadFile(keyPath)
+	content, err := os.ReadFile(keyPath)
 	if os.IsNotExist(err) {
 		return minisign.PublicKey{}, "", errors.New("minitrust: public key doesn't exist in trusted directory.")
 	} else if err != nil {

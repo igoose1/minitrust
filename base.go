@@ -2,7 +2,6 @@ package minitrust
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,8 +10,8 @@ import (
 )
 
 const (
-	trustedDirPerm = 0700
-	trustedKeyPerm = 0600
+	trustedDirPerm = 0o700
+	trustedKeyPerm = 0o600
 )
 
 type Base struct {
@@ -66,12 +65,6 @@ func (b *Base) AddTrustedPubKey(rawPubKey, comment string) error {
 		return err
 	}
 
-	content := strings.Join(
-		[]string{
-			commentPrefix + comment,
-			EncodePublicKey(pk),
-		},
-		"\n",
-	)
-	return ioutil.WriteFile(b.getKeyPath(pk.KeyId), []byte(content), trustedKeyPerm)
+	content := commentPrefix + comment + "\n" + EncodePublicKey(pk)
+	return os.WriteFile(b.getKeyPath(pk.KeyId), []byte(content), trustedKeyPerm)
 }
