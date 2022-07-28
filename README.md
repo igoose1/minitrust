@@ -29,7 +29,7 @@ minitrust uses [go-minisign][go-minisign].
 
 ## Compile
 
-Build from source with Go 1.18+.
+Build from source with Go 1.17+.
 
 	% go build -o . ./cmd/minitrust/minitrust.go
 
