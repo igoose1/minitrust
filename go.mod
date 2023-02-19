@@ -2,9 +2,9 @@ module github.com/igoose1/minitrust
 
 go 1.18
 
-require github.com/jedisct1/go-minisign v0.0.0-20211028175153-1c139d1cc84b
+require github.com/jedisct1/go-minisign v0.0.0-20230211184525-1f273d8dc776
 
 require (
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
+	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 )
