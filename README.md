@@ -1,11 +1,9 @@
 # Minitrust
 
-Minitrust is a tool to verify minisign signatures with public keys from
-"trusted list".
-
-For more information about minisign, please refer to the [Minisign
-documentation][minisign-docs]. As a core library and an only dependency
-minitrust uses [go-minisign][go-minisign].
+Minitrust is a tool that verifies minisign signatures using public keys from a
+trusted list. For more information about minisign, please see the [Minisign
+documentation][minisign-docs]. Minitrust relies solely on
+[go-minisign][go-minisign] as its core library and only dependency.
 
 [minisign-docs]: https://jedisct1.github.io/minisign/
 [go-minisign]: https://github.com/jedisct1/go-minisign/
