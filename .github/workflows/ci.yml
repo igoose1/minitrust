@@ -43,7 +43,7 @@ jobs:
           lfs: true
 
       - name: Install go-critic
-        run: go install github.com/go-critic/go-critic/cmd/gocritic@v0.6.3
+        run: go install github.com/go-critic/go-critic/cmd/gocritic@v0.11.0
 
       - name: Run go-critic
         run: gocritic check -enableAll
