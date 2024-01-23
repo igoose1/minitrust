@@ -25,15 +25,14 @@ documentation][minisign-docs]. Minitrust relies solely on
 
 	MINITRUST_DIR  name of the trusted directory (default: ~/.minisign/trusted)
 
+## Install
+
+The easiest way to install it is with `go install`:
+
+    % go install github.com/igoose1/minitrust@latest
+
 ## Compile
 
-Build from source with Go 1.18+.
+If you have a source code, you can build it with Go 1.21+.
 
-	% go build -o . ./cmd/minitrust/minitrust.go
-
-Also, building with redo is supported.
-
-	% redo
-
-For more information about redo, I recommend installing
-[goredo](http://www.goredo.cypherpunks.ru/).
+    % go build

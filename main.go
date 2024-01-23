@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/igoose1/minitrust"
+	"github.com/igoose1/minitrust/pkg/minitrust"
 	"github.com/jedisct1/go-minisign"
 )
 

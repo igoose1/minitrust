@@ -1,6 +1,6 @@
 module github.com/igoose1/minitrust
 
-go 1.18
+go 1.21
 
 require github.com/jedisct1/go-minisign v0.0.0-20230211184525-1f273d8dc776
 
