@@ -29,6 +29,7 @@ func (b *Base) EnsureTrustedDir() error {
 	}
 	return nil
 }
+
 func (b *Base) getKeyPath(keyID [8]byte) string {
 	return filepath.Join(b.trustedDir, EncodeID(keyID)+".pub")
 }

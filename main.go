@@ -57,7 +57,6 @@ func main() {
 		trustedDir string
 	)
 	verifyCommand := flag.NewFlagSet("-V", flag.ExitOnError)
-	// flag.BoolVar(&hashFlag, "H", false, "require input to be prehashed.")
 	verifyCommand.StringVar(&sigFile, "x", "", "signature file (default: <file>.minisig)")
 	verifyCommand.BoolVar(&outputFlag, "o", false, "output the file content after verification")
 	verifyCommand.StringVar(&file, "m", "", "file to verify.")
@@ -74,7 +73,7 @@ func main() {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		trustedDir = filepath.Join(homedir, ".minisign/trusted")
+		trustedDir = filepath.Join(homedir, ".minisign", "trusted")
 	}
 
 	if len(os.Args) < 2 {

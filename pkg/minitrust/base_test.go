@@ -6,8 +6,10 @@ import (
 	"testing"
 )
 
-const rawPubKey = "RWRWfuqg9DPmJzteqVmj5xSm7z1V0ZTNA66UGpF+5vdkUe8llEMWkC6n"
-const pubKeyID = "27E633F4A0EA7E56"
+const (
+	rawPubKey = "RWRWfuqg9DPmJzteqVmj5xSm7z1V0ZTNA66UGpF+5vdkUe8llEMWkC6n"
+	pubKeyID  = "27E633F4A0EA7E56"
+)
 
 func mkdirTempHome(t *testing.T) string {
 	dir, err := os.MkdirTemp("", "test-minitrust-*")
